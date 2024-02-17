@@ -1,11 +1,16 @@
+import os
 import requests
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 from langchain.output_parsers import ResponseSchema, StructuredOutputParser
 from langchain.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
+from googleapiclient.discovery import build
+from pprint import pprint
 
 load_dotenv()
+
+# TODO: add custom search api for competitive research
 
 def get_soup(url):
     response = requests.get(url)
@@ -49,13 +54,30 @@ def extract_keywords(text):
 
     return keywords['keywords']
 
+def get_search_results(query):
+    service = build(
+        'customsearch',
+        'v1',
+        developerKey=os.getenv('CUSTOM_SEARCH_API_KEY')
+    )
+
+    res = service.cse().list(
+        q=query,
+        cx=os.getenv('CUSTOM_SEARCH_ENGINE_ID')
+    ).execute()
+
+    return res
+
+
 if __name__ == '__main__':
     url = 'https://ak-codes.com/google-knowledge-graph-search/'
     soup = get_soup(url)
     body = soup.find('body')
     text = scrape_content(body)
-
     keywords = extract_keywords(text)
-
     print(keywords)
+
+    res = get_search_results(keywords[0])
+    links = [l['link'] for l in res['items']]
+    pprint(links)
 
