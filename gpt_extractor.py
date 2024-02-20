@@ -1,5 +1,6 @@
 import os
 import requests
+import argparse
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 from langchain.output_parsers import ResponseSchema, StructuredOutputParser
@@ -9,8 +10,6 @@ from googleapiclient.discovery import build
 from pprint import pprint
 
 load_dotenv()
-
-# TODO: add custom search api for competitive research
 
 def get_soup(url):
     response = requests.get(url)
@@ -70,7 +69,21 @@ def get_search_results(query):
 
 
 if __name__ == '__main__':
-    url = 'https://ak-codes.com/google-knowledge-graph-search/'
+    parser = argparse.ArgumentParser(
+        description='Returns list of search results links'
+    )
+
+    parser.add_argument(
+        '-u',
+        '--url',
+        type=str,
+        required=True,
+        help='URL address from where to scrape information'
+    )
+
+    args = parser.parse_args()
+    url = args.url
+
     soup = get_soup(url)
     body = soup.find('body')
     text = scrape_content(body)
